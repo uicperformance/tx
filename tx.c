@@ -10,21 +10,19 @@
 
 #define MAXSIZE 1024*1024*1024
 pthread_barrier_t wall;
-int size=4096;
+
+int size=4096; // default size: control with -s command line argument
 
 char shared[MAXSIZE];
 
 void send(char* buf) {
-    // for(int i=0;i<size;i++) {
-    //     shared[i]=buf[i];
-    // }
     memcpy(shared,buf,size);
     pthread_barrier_wait(&wall);
 }
 
 void recv(char* buf) {
-    memcpy(buf,shared,size);
     pthread_barrier_wait(&wall);
+    memcpy(buf,shared,size);  
 }
 
 void* sender(void* arg) {
@@ -32,22 +30,30 @@ void* sender(void* arg) {
     uint64_t time=0;
 
     char buf[size];
+    char buf2[size];
+    memset(buf,0,size);
     for(int i=0;i<ITERATIONS;i++) {
+        pthread_barrier_wait(&wall);
+
         struct timespec before,after;
         clock_gettime(CLOCK_MONOTONIC,&before);
 
+    // SINGLE-BUFFERING: the sender first prepares the message, then sends it
+    // DOUBLE-BUFFERING: the sender sends a message, then starts preparing the next one
+    #ifndef DOUBLEBUFFER
         memset(buf,i,size);
         send(buf);
-        asm volatile("":::);
+    #else
+       send((i%2?buf:buf2));
+       memset((i%2?buf2:buf),i+1,size);
+    #endif
 
         clock_gettime(CLOCK_MONOTONIC,&after);
         time += ((after.tv_sec-before.tv_sec)*(uint64_t)1000000000+(after.tv_nsec-before.tv_nsec));
-
-        pthread_barrier_wait(&wall);
     }
 
     printf("Sender: %ld secs total, %lf GB/sec @ size %d\n",
-    time/1000000000,2l*size*ITERATIONS*1000000000.0/time/1024/1024/1024,size);
+    time/1000000000,1l*size*ITERATIONS*1000000000.0/time/1024/1024/1024,size);
 
 }
 
@@ -71,10 +77,8 @@ void* receiver(void* arg) {
         struct timespec before,after;
         clock_gettime(CLOCK_MONOTONIC,&before);
 
-        memset(buf,i,size);
         recv(buf);
         
-        asm volatile("":::);
         clock_gettime(CLOCK_MONOTONIC,&after);
         time += ((after.tv_sec-before.tv_sec)*(uint64_t)1000000000+(after.tv_nsec-before.tv_nsec));
 
@@ -84,7 +88,7 @@ void* receiver(void* arg) {
     }
 
     printf("Receiver: %ld secs total, %lf GB/sec @ size %d\n",
-    time/1000000000,2l*size*ITERATIONS*1000000000.0/time/1024/1024/1024,size);
+    time/1000000000,1l*size*ITERATIONS*1000000000.0/time/1024/1024/1024,size);
 }
 
 int main(int argc, char** argv) {
