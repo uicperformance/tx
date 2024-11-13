@@ -64,3 +64,20 @@ The shared buffer isn't strictly necessary. Redesign send() and receive() to cop
 
 Share your best result with the class on Piazza! 
 
+## BONUS CHALLENGE: cooperative copy
+
+After eliminating the shared buffer, and using double-buffering, here is an example output showing a substantial speedup:
+
+`./txbench_double -s 4096
+Receiver: 1 secs total, 2.569597 GB/sec @ size 4096
+Sender: 0 secs total, 12.198711 GB/sec @ size 4096`
+
+However, note how the Sender is still a lot faster. 
+
+*First:* this is only true for buffers smaller than 32kB. What's causing the sender to run slower for larger buffers than that?
+
+*Second:* for the smaller buffers, change the design so that send() helps out recv() with the job of copying the data from the send buffer to the receive buffer. Did this improve performance?
+
+
+
+
