@@ -27,7 +27,8 @@ changes to the other functions.
 
 Here are some example runs using the template code on nodes, with 4096 byte messages:
 
-`./txtest -s 4096
+```
+./txtest -s 4096
 Sender: 1 secs total, 2.801516 GB/sec @ size 4096
 Receiver: 4 secs total, 0.766784 GB/sec @ size 4096
 
@@ -37,7 +38,8 @@ Sender: 2 secs total, 1.775764 GB/sec @ size 4096
 
 ./txbench_double -s 4096
 Sender: 2 secs total, 1.539654 GB/sec @ size 4096
-Receiver: 3 secs total, 1.006641 GB/sec @ size 4096`
+Receiver: 3 secs total, 1.006641 GB/sec @ size 4096
+```
 
 Depending on your implementation, the sender or the receiver may end up faster than the other, after which point it simply waits for the other to finish before starting the next round. Thus, use the lower of the two throughput numbers as the performance of your design.
 
